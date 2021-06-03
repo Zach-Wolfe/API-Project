@@ -7,3 +7,6 @@ Includes all API and data storage configuration needed to host the API locally.
 
 sqlitedb.file:
 Local file used to save new users and blog posts. Formatted for SQLite interface.
+
+linked_list.py:
+Tree data structure using nodes to organize data
