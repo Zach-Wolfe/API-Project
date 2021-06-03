@@ -11,6 +11,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import linked_list
 
+
 # data storage configuration
 ######################################################
 app = Flask(__name__)
@@ -42,7 +43,7 @@ class User(db.Model):
     email = db.Column(db.String(50))
     address = db.Column(db.String(200))
     phone = db.Column(db.String(50))
-    posts = db.relationship("BlogPost")
+    posts = db.relationship("BlogPost", cascade="all, delete")
 
 
 class BlogPost(db.Model):
@@ -73,10 +74,29 @@ def create_user():
 @app.route("/user/descending_id", methods=["GET"])
 def get_all_users_descending():
     users = User.query.all()
-    all_users_ll = linked_list.LinkedList()
+    all_users = linked_list.LinkedList()
 
     for user in users:
-        all_users_ll.insert_beginning(
+        all_users.insert_front(
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "address": user.address,
+                "phone": user.phone
+            }
+        )
+
+    return jsonify(all_users.to_array()), 200
+
+
+@app.route("/user/ascending_id", methods=["GET"])
+def get_all_users_ascending():
+    users = User.query.all()
+    all_users = linked_list.LinkedList()
+
+    for user in users:
+        all_users.insert_end(
             {
                 "id": user.id,
                 "name": user.name,
@@ -86,21 +106,35 @@ def get_all_users_descending():
             }
         )
 
-    return jsonify(all_users_ll.to_array()), 200
-
-@app.route("/user/ascending_id", methods=["GET"])
-def get_all_users_ascending():
-    pass
+    return jsonify(all_users.to_array()), 200
 
 
 @app.route("/user/<user_id>", methods=["GET"])
 def get_one_user(user_id):
-    pass
+    users = User.query.all()
+    all_users = linked_list.LinkedList()
+
+    for user in users:
+        all_users.insert_front(
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "address": user.address,
+                "phone": user.phone,
+            }
+        )
+
+    user = all_users.get_user(user_id)
+    return jsonify(user), 200
 
 
 @app.route("/user/<user_id>", methods=["DELETE"])
 def delete_user(user_id):
-    pass
+    user = User.query.filter_by(id=user_id).first()
+    db.session.delete(user)
+    db.session.commit()
+    return f"{user_id} has been deleted", 200
 
 
 @app.route("/blog_post/<user_id>", methods=["POST"])
@@ -128,3 +162,5 @@ def delete_blog_post(blog_post_id):
 ######################################################
 if __name__ == "__main__":
     app.run(debug=True)
+
+
